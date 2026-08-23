@@ -188,7 +188,10 @@ function render(list){
       </div>
       <div class="why">💡 ${whyWin(d)}</div>
       <div class="desc">${formatDesc(d.Description)}</div>
-      <button class="toggle">Show more ▾</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="toggle">Show more ▾</button>
+        <button class="open-btn" data-ps="${esc(d['PS Number'])}">Open ⤢</button>
+      </div>
     </article>`;
   }).join('');
 
@@ -209,13 +212,60 @@ function renderTopPicks(){
   const top=[...DATA].sort((a,b)=>b.winnability_score-a.winnability_score).slice(0,5);
   box.classList.add('show');
   box.innerHTML=`<div style="font-weight:700;margin:6px 0 4px;color:var(--amber)">🏆 Top 5 statements to WIN (by win-rate score)</div>`+
-    top.map((d,i)=>`<div class="tp-card">
+    top.map((d,i)=>`<div class="tp-card" data-ps="${esc(d['PS Number'])}">
       <div class="tp-rank">${i+1}</div>
       <div class="tp-meta"><div class="t">${esc(d['Problem Statement Title'])}</div>
         <div class="s">${esc(d['PS Number'])} · ${esc(d.Category)} · ${esc(d.Theme)} · ${esc(d.complexity_level)}</div></div>
       <div class="tp-score">${d.winnability_score}</div>
     </div>`).join('');
 }
+
+/* ---------- detail modal ---------- */
+function openModal(d){
+  const emoji=THEME_EMOJI[d.Theme]||'🧩';
+  const chips=d.tech_stack.map(t=>`<span class="chip">${esc(t.toUpperCase())}</span>`).join('');
+  $('#modalBody').innerHTML=`
+    <div class="card-head">
+      <span class="ic">${CAT_ICON[d.Category]||'💡'}</span>
+      <div>
+        <div class="psno">${esc(d['PS Number'])} · S.No. ${esc(d['S.No.'])} · ${emoji} ${esc(d.Theme)}</div>
+        <div class="title" style="font-size:18px;margin-top:3px">${esc(d['Problem Statement Title'])}</div>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge b-cat ${esc(d.Category)}">${esc(d.Category)}</span>
+      <span class="badge b-cmp ${esc(d.complexity_level)}">${esc(d.complexity_level)} Complexity</span>
+      <span class="badge b-win ${esc(d.winnability_tier)}">${esc(d.winnability_tier)} Win</span>
+    </div>
+    <div class="chips">${chips}</div>
+    <div class="meta">
+      <span><b>Organization:</b> ${esc(d.Organization)}</span>
+      <span><b>Department:</b> ${esc(d.Department)}</span>
+      <span><b>Deadline:</b> ${esc(d['Deadline for Idea Submission'])}</span>
+      <span><b>Entries:</b> ${esc(d['Submitted Idea(s) Count'])}</span>
+    </div>
+    <div class="scores"><span class="slabel">Win</span><span class="bar win"><i style="width:${d.winnability_score}%"></i></span><span class="sval">${d.winnability_score}</span></div>
+    <div class="scores"><span class="slabel">Complex</span><span class="bar cmp"><i style="width:${d.complexity_score}%"></i></span><span class="sval">${d.complexity_score}</span></div>
+    <div class="why">💡 ${whyWin(d)}</div>
+    <div class="desc open" style="max-height:none">${formatDesc(d.Description)}</div>`;
+  $('#modal').hidden=false;
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  $('#modal').hidden=true;
+  document.body.style.overflow='';
+}
+
+/* delegated open triggers (top picks + card "Open" buttons) */
+document.addEventListener('click', e=>{
+  const trig=e.target.closest('[data-ps]');
+  if(trig){
+    const rec=DATA.find(d=>d['PS Number']===trig.dataset.ps);
+    if(rec){ openModal(rec); return; }
+  }
+  if(e.target.id==='modalClose' || e.target.id==='modal') closeModal();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#modal').hidden) closeModal(); });
 
 /* ---------- events ---------- */
 $('#catSeg').addEventListener('click',e=>{
