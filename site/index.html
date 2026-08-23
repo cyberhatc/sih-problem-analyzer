@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIH 2026 — Problem Statement Analyzer & Win Tracker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">SIH'26</span>
+    <div>
+      <h1>Problem Statement Analyzer</h1>
+      <p>Filter · Rank · Analyze — pick the statement you can <b>win</b></p>
+    </div>
+  </div>
+  <button id="winModeBtn" class="winmode-btn">🏆 Win Mode: OFF</button>
+</header>
+
+<section class="stats" id="stats"></section>
+
+<section class="controls">
+  <div class="control-row">
+    <div class="seg" id="catSeg">
+      <button data-cat="All" class="active">All</button>
+      <button data-cat="Software">Software</button>
+      <button data-cat="Hardware">Hardware</button>
+    </div>
+
+    <div class="seg" id="cmpSeg">
+      <button data-cmp="All" class="active">Any Complexity</button>
+      <button data-cmp="Easy">Easy</button>
+      <button data-cmp="Medium">Medium</button>
+      <button data-cmp="Hard">Hard</button>
+    </div>
+
+    <div class="seg" id="winSeg">
+      <button data-win="All" class="active">Any Win-Rate</button>
+      <button data-win="High">High</button>
+      <button data-win="Medium">Medium</button>
+      <button data-win="Low">Low</button>
+    </div>
+  </div>
+
+  <div class="control-row">
+    <select id="themeSel"><option value="All">All Themes</option></select>
+    <select id="techSel"><option value="All">All Tech Stacks</option></select>
+    <select id="sortSel">
+      <option value="sno">Sort: S.No.</option>
+      <option value="win_desc">Sort: Win-Rate (High→Low)</option>
+      <option value="cmp_desc">Sort: Complexity (Hard→Easy)</option>
+      <option value="cmp_asc">Sort: Complexity (Easy→Hard)</option>
+      <option value="theme">Sort: Theme (A→Z)</option>
+    </select>
+    <input id="search" type="text" placeholder="Search title / org / PS number…">
+  </div>
+</section>
+
+<section class="toppicks" id="topPicks"></section>
+
+<main id="grid" class="grid"></main>
+
+<p class="foot">Loaded <span id="count">0</span> problem statements · Data source: sih.gov.in problem statement export</p>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
