@@ -21,6 +21,58 @@ const THEME_EMOJI = {
 const CMP_COLOR = { Easy:'var(--green)', Medium:'var(--amber)', Hard:'var(--red)' };
 const CAT_ICON = { Software:'💻', Hardware:'🔧' };
 
+/* ---------- shared status (4 levels, stored in Vercel KV) ---------- */
+const STATUS_LEVELS = [
+  { key:'rejected', label:'Rejected' },
+  { key:'probably', label:'Probably' },
+  { key:'maybe',    label:'Maybe' },
+  { key:'selected', label:'Selected' }
+];
+const statusMap = {};   // { "PS123": "selected", ... }
+
+function statusControl(ps){
+  const cur = statusMap[ps] || '';
+  const btns = STATUS_LEVELS.map(l=>
+    `<button class="st-btn ${l.key} ${cur===l.key?'active':''}" data-ps="${esc(ps)}" data-status="${l.key}">${l.label}</button>`
+  ).join('');
+  const clear = cur ? `<button class="st-btn clear" data-ps="${esc(ps)}" data-status="">✕</button>` : '';
+  return `<div class="status-seg" data-ps="${esc(ps)}">${btns}${clear}</div>`;
+}
+
+async function loadStatus(){
+  try{
+    const r = await fetch('/api/status');
+    const data = await r.json();
+    Object.assign(statusMap, data || {});
+    apply();
+    if(!$('#modal').hidden) refreshModalStatus();
+  }catch(e){ /* offline / not configured: statuses just won't show */ }
+}
+
+async function setStatus(ps, status){
+  statusMap[ps] = status || undefined;
+  if(!status) delete statusMap[ps];
+  // optimistic UI
+  syncStatusButtons(ps);
+  try{
+    await fetch('/api/status', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ ps, status })
+    });
+    const r = await fetch('/api/status');
+    Object.assign(statusMap, await r.json() || {});
+    syncStatusButtons(ps);
+  }catch(e){ /* keep optimistic value if backend unreachable */ }
+}
+
+function syncStatusButtons(ps){
+  $$(`.status-seg[data-ps="${cssEscape(ps)}"] .st-btn`).forEach(b=>{
+    b.classList.toggle('active', b.dataset.status === (statusMap[ps]||''));
+  });
+}
+function cssEscape(s){ return (s||'').replace(/["\\]/g,'\\$&'); }
+
 /* ---------- description parser ---------- */
 function fixBullets(t){ return t.replace(/\s0\s(?=[A-Z][a-z])/g, ' • '); }
 
@@ -188,6 +240,7 @@ function render(list){
       </div>
       <div class="why">💡 ${whyWin(d)}</div>
       <div class="desc">${formatDesc(d.Description)}</div>
+      ${statusControl(d['PS Number'])}
       <div style="display:flex;gap:8px;align-items:center">
         <button class="toggle">Show more ▾</button>
         <button class="open-btn" data-ps="${esc(d['PS Number'])}">Open ⤢</button>
@@ -247,7 +300,8 @@ function openModal(d){
     <div class="scores"><span class="slabel">Win</span><span class="bar win"><i style="width:${d.winnability_score}%"></i></span><span class="sval">${d.winnability_score}</span></div>
     <div class="scores"><span class="slabel">Complex</span><span class="bar cmp"><i style="width:${d.complexity_score}%"></i></span><span class="sval">${d.complexity_score}</span></div>
     <div class="why">💡 ${whyWin(d)}</div>
-    <div class="desc open" style="max-height:none">${formatDesc(d.Description)}</div>`;
+    <div class="desc open" style="max-height:none">${formatDesc(d.Description)}</div>
+    ${statusControl(d['PS Number'])}`;
   $('#modal').hidden=false;
   document.body.style.overflow='hidden';
 }
@@ -258,6 +312,7 @@ function closeModal(){
 
 /* delegated open triggers (top picks + card "Open" buttons) */
 document.addEventListener('click', e=>{
+  if(e.target.closest('.status-seg')) return;
   const trig=e.target.closest('[data-ps]');
   if(trig){
     const rec=DATA.find(d=>d['PS Number']===trig.dataset.ps);
@@ -266,6 +321,20 @@ document.addEventListener('click', e=>{
   if(e.target.id==='modalClose' || e.target.id==='modal') closeModal();
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#modal').hidden) closeModal(); });
+
+/* ---------- status control clicks ---------- */
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.st-btn');
+  if(btn){
+    e.stopPropagation();
+    setStatus(btn.dataset.ps, btn.dataset.status);
+  }
+});
+
+/* keep modal status control in sync if data changes */
+function refreshModalStatus(){
+  $$('#modalBody .status-seg').forEach(seg=>syncStatusButtons(seg.dataset.ps));
+}
 
 /* ---------- events ---------- */
 $('#catSeg').addEventListener('click',e=>{
@@ -303,3 +372,4 @@ $('#winModeBtn').onclick=()=>{
 
 renderStats();
 apply();
+loadStatus();

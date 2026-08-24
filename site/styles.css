@@ -101,3 +101,14 @@ select:focus,input:focus{border-color:var(--accent)}
 .open-btn:hover{border-color:var(--accent)}
 .tp-card{cursor:pointer;transition:.15s}
 .tp-card:hover{border-color:var(--amber);transform:translateX(3px)}
+
+/* ---------- 4-level shared status control ---------- */
+.status-seg{display:inline-flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px;align-items:center}
+.st-btn{background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.st-btn:hover{border-color:var(--accent);color:var(--txt)}
+.st-btn.rejected.active{background:var(--red);border-color:var(--red);color:#1a0a0d}
+.st-btn.probably.active{background:#f5a623;border-color:#f5a623;color:#1a1205}
+.st-btn.maybe.active{background:var(--soft);border-color:var(--soft);color:#04201d}
+.st-btn.selected.active{background:var(--green);border-color:var(--green);color:#04231a}
+.st-btn.clear{background:transparent;color:var(--muted);padding:6px 9px}
+.st-btn.clear:hover{border-color:var(--red);color:var(--red)}
