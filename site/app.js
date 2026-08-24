@@ -204,7 +204,8 @@ function apply(){
     if(state.win!=='All' && d.winnability_tier!==state.win) return false;
     if(state.theme!=='All' && d.Theme!==state.theme) return false;
     if(state.tech!=='All' && !d.tech_stack.includes(state.tech)) return false;
-    if(state.st!=='All' && (statusMap[d['PS Number']]||'') !== state.st) return false;
+    if(state.st==='notselected'){ if((statusMap[d['PS Number']]||'')==='selected') return false; }
+    else if(state.st!=='All' && (statusMap[d['PS Number']]||'') !== state.st) return false;
     if(state.search){
       const q=state.search.toLowerCase();
       const hay=(d['Problem Statement Title']+' '+d.Organization+' '+d['PS Number']).toLowerCase();
