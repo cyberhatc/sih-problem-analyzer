@@ -4,20 +4,20 @@
 
 const KEY = 'ps_status';
 
-async function upstash(cmd){
+async function upstash(args){
   const r = await fetch(process.env.KV_REST_API_URL, {
     method:'POST',
     headers:{
       Authorization:`Bearer ${process.env.KV_REST_API_TOKEN}`,
       'Content-Type':'application/json'
     },
-    body: JSON.stringify(cmd)
+    body: JSON.stringify(args)
   });
   return r.json();
 }
 
 async function getAll(){
-  const res = await upstash({ get: KEY });
+  const res = await upstash(['GET', KEY]);
   if(!res || res.result == null) return {};
   try { return JSON.parse(res.result); } catch { return {}; }
 }
@@ -35,7 +35,7 @@ export default async function handler(req, res){
 
     const all = await getAll();
     if(!status) delete all[ps]; else all[ps] = status;
-    await upstash({ set:[KEY, JSON.stringify(all)] });
+    await upstash(['SET', KEY, JSON.stringify(all)]);
     return res.status(200).json(all);
   }
   return res.status(405).json({ error:'method not allowed' });
