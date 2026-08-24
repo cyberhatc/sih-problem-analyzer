@@ -2,7 +2,7 @@ const DATA = window.PROBLEM_DATA || [];
 
 const state = {
   cat: 'All', cmp: 'All', win: 'All', theme: 'All', tech: 'All',
-  sort: 'sno', search: '', winMode: false
+  st: 'All', sort: 'sno', search: '', winMode: false
 };
 
 const $ = (s, r=document) => r.querySelector(s);
@@ -204,6 +204,7 @@ function apply(){
     if(state.win!=='All' && d.winnability_tier!==state.win) return false;
     if(state.theme!=='All' && d.Theme!==state.theme) return false;
     if(state.tech!=='All' && !d.tech_stack.includes(state.tech)) return false;
+    if(state.st!=='All' && (statusMap[d['PS Number']]||'') !== state.st) return false;
     if(state.search){
       const q=state.search.toLowerCase();
       const hay=(d['Problem Statement Title']+' '+d.Organization+' '+d['PS Number']).toLowerCase();
@@ -392,6 +393,11 @@ $('#cmpSeg').addEventListener('click',e=>{
   if(e.target.tagName!=='BUTTON')return;
   $$('#cmpSeg button').forEach(b=>b.classList.remove('active'));
   e.target.classList.add('active'); state.cmp=e.target.dataset.cmp; apply();
+});
+$('#statusSeg').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  $$('#statusSeg button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active'); state.st=e.target.dataset.st; apply();
 });
 $('#winSeg').addEventListener('click',e=>{
   if(e.target.tagName!=='BUTTON')return;
