@@ -108,6 +108,42 @@ function syncStatusButtons(ps){
 }
 function cssEscape(s){ return (s||'').replace(/["\\]/g,'\\$&'); }
 
+/* ---------- text-to-speech (browser SpeechSynthesis) ---------- */
+function statementText(d){
+  const strip = html => (html||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  const parts = [
+    'Problem Statement. ' + (d['Problem Statement Title']||''),
+    'Theme: ' + (d.Theme||''),
+    'Organization: ' + (d.Organization||''),
+    'Complexity: ' + (d.complexity_level||''),
+    strip(d.Description)
+  ];
+  return parts.join('. ');
+}
+
+let ttsUtterance = null;
+function showTTS(){ $('#ttsBar').hidden=false; }
+function hideTTS(){ $('#ttsBar').hidden=true; const t=$('#ttsToggle'); if(t) t.textContent='⏸ Pause'; }
+
+function speak(text){
+  if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = parseFloat($('#ttsRate').value) || 1;
+  u.onend = hideTTS;
+  u.onerror = hideTTS;
+  ttsUtterance = u;
+  window.speechSynthesis.speak(u);
+  showTTS();
+}
+function toggleTTS(){
+  if(!('speechSynthesis' in window)) return;
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  else if(window.speechSynthesis.speaking) window.speechSynthesis.pause();
+  $('#ttsToggle').textContent = window.speechSynthesis.paused ? '▶ Resume' : '⏸ Pause';
+}
+function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); hideTTS(); }
+
 /* ---------- description parser ---------- */
 function fixBullets(t){ return t.replace(/\s0\s(?=[A-Z][a-z])/g, ' • '); }
 
@@ -284,6 +320,7 @@ function render(list){
       ${statusControl(d['PS Number'])}
       <div style="display:flex;gap:8px;align-items:center">
         <button class="toggle">Show more ▾</button>
+        <button class="speak-btn" data-ps="${esc(d['PS Number'])}">🔊 Read</button>
         <button class="open-btn" data-ps="${esc(d['PS Number'])}">Open ⤢</button>
       </div>
     </article>`;
@@ -349,7 +386,10 @@ function openModal(d){
     <div class="scores"><span class="slabel">Complex</span><span class="bar cmp"><i style="width:${d.complexity_score}%"></i></span><span class="sval">${d.complexity_score}</span></div>
     <div class="why">💡 ${whyWin(d)}</div>
     <div class="desc open" style="max-height:none">${formatDesc(d.Description)}</div>
-    ${statusControl(d['PS Number'])}`;
+    ${statusControl(d['PS Number'])}
+    <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+      <button class="speak-btn" data-ps="${esc(d['PS Number'])}">🔊 Read aloud</button>
+    </div>`;
   $('#modal').hidden=false;
   document.body.style.overflow='hidden';
 }
@@ -361,6 +401,7 @@ function closeModal(){
 /* delegated open triggers (top picks + card "Open" buttons) */
 document.addEventListener('click', e=>{
   if(e.target.closest('.status-seg')) return;
+  if(e.target.closest('.speak-btn')) return;
   const trig=e.target.closest('[data-ps]');
   if(trig){
     const rec=DATA.find(d=>d['PS Number']===trig.dataset.ps);
@@ -376,6 +417,12 @@ document.addEventListener('click', e=>{
   if(btn){
     e.stopPropagation();
     setStatus(btn.dataset.ps, btn.dataset.status);
+  }
+  const spk = e.target.closest('.speak-btn');
+  if(spk){
+    e.stopPropagation();
+    const rec = DATA.find(d=>d['PS Number']===spk.dataset.ps);
+    if(rec) speak(statementText(rec));
   }
 });
 
@@ -421,6 +468,14 @@ $('#winModeBtn').onclick=()=>{
     $('#winSeg [data-win="All"]').classList.add('active'); state.win='All';
   }
   renderTopPicks(); apply();
+};
+
+$('#ttsToggle').onclick = toggleTTS;
+$('#ttsStop').onclick = stopTTS;
+$('#ttsRate').oninput = e=>{
+  const r = parseFloat(e.target.value);
+  $('#ttsRateVal').textContent = r.toFixed(1)+'×';
+  if(ttsUtterance) ttsUtterance.rate = r;
 };
 
 renderStats();

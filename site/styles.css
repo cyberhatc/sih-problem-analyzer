@@ -114,6 +114,16 @@ select:focus,input:focus{border-color:var(--accent)}
 .st-btn.clear{background:transparent;color:var(--muted);padding:6px 9px}
 .st-btn.clear:hover{border-color:var(--red);color:var(--red)}
 
+/* text-to-speech */
+.speak-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.speak-btn:hover{filter:brightness(1.1)}
+.tts-bar{position:fixed;bottom:18px;right:18px;z-index:60;display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.tts-bar .tts-ico{font-size:18px}
+.tts-btn{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+.tts-btn:hover{border-color:var(--accent)}
+.tts-rate{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.tts-rate input[type=range]{width:90px;accent-color:var(--accent)}
+
 /* status flag + card/modal tinting (identifiable from afar) */
 .st-flag{position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:8px;z-index:3}
 .st-flag.rejected{background:var(--red);color:#1a0a0d}

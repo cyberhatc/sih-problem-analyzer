@@ -79,6 +79,16 @@
   </div>
 </div>
 
+<div id="ttsBar" class="tts-bar" hidden>
+  <span class="tts-ico">🔊</span>
+  <button id="ttsToggle" class="tts-btn">⏸ Pause</button>
+  <button id="ttsStop" class="tts-btn">⏹ Stop</button>
+  <label class="tts-rate">Speed
+    <input id="ttsRate" type="range" min="0.5" max="2" step="0.1" value="1">
+    <span id="ttsRateVal">1.0×</span>
+  </label>
+</div>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
