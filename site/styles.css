@@ -95,6 +95,7 @@ select:focus,input:focus{border-color:var(--accent)}
 @keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 .modal-close{position:absolute;top:14px;right:16px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer;line-height:1}
 .modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{position:relative;border-radius:14px;padding:18px 20px}
 .modal-box .desc{max-height:none !important;overflow:visible}
 .modal-box .desc::after{display:none}
 .open-btn{margin-top:2px;background:var(--panel2);color:var(--accent);border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer}
@@ -112,3 +113,20 @@ select:focus,input:focus{border-color:var(--accent)}
 .st-btn.selected.active{background:var(--green);border-color:var(--green);color:#04231a}
 .st-btn.clear{background:transparent;color:var(--muted);padding:6px 9px}
 .st-btn.clear:hover{border-color:var(--red);color:var(--red)}
+
+/* status flag + card/modal tinting (identifiable from afar) */
+.st-flag{position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:8px;z-index:3}
+.st-flag.rejected{background:var(--red);color:#1a0a0d}
+.st-flag.probably{background:var(--amber);color:#1a1205}
+.st-flag.maybe{background:var(--soft);color:#04201d}
+.st-flag.selected{background:var(--green);color:#04231a}
+
+.card.st-rejected{background:linear-gradient(180deg,rgba(255,93,108,.12),rgba(255,93,108,0) 55%),var(--panel);box-shadow:0 0 0 1px rgba(255,93,108,.35) inset}
+.card.st-probably{background:linear-gradient(180deg,rgba(245,166,35,.12),rgba(245,166,35,0) 55%),var(--panel);box-shadow:0 0 0 1px rgba(245,166,35,.35) inset}
+.card.st-maybe{background:linear-gradient(180deg,rgba(43,212,196,.12),rgba(43,212,196,0) 55%),var(--panel);box-shadow:0 0 0 1px rgba(43,212,196,.35) inset}
+.card.st-selected{background:linear-gradient(180deg,rgba(39,192,138,.14),rgba(39,192,138,0) 55%),var(--panel);box-shadow:0 0 0 1px rgba(39,192,138,.4) inset}
+
+.modal-body.st-rejected{background:linear-gradient(180deg,rgba(255,93,108,.12),rgba(255,93,108,0) 40%),var(--panel)}
+.modal-body.st-probably{background:linear-gradient(180deg,rgba(245,166,35,.12),rgba(245,166,35,0) 40%),var(--panel)}
+.modal-body.st-maybe{background:linear-gradient(180deg,rgba(43,212,196,.12),rgba(43,212,196,0) 40%),var(--panel)}
+.modal-body.st-selected{background:linear-gradient(180deg,rgba(39,192,138,.14),rgba(39,192,138,0) 40%),var(--panel)}

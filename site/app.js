@@ -28,6 +28,11 @@ const STATUS_LEVELS = [
   { key:'maybe',    label:'Maybe' },
   { key:'selected', label:'Selected' }
 ];
+const STATUS_LABEL = Object.fromEntries(STATUS_LEVELS.map(l=>[l.key,l.label]));
+const STATUS_COLOR = {
+  rejected:'var(--red)', probably:'var(--amber)',
+  maybe:'var(--soft)', selected:'var(--green)'
+};
 const statusMap = {};   // { "PS123": "selected", ... }
 
 function statusControl(ps){
@@ -54,6 +59,7 @@ async function setStatus(ps, status){
   if(!status) delete statusMap[ps];
   // optimistic UI
   syncStatusButtons(ps);
+  applyCardStatus(ps);
   try{
     await fetch('/api/status', {
       method:'POST',
@@ -63,7 +69,36 @@ async function setStatus(ps, status){
     const r = await fetch('/api/status');
     Object.assign(statusMap, await r.json() || {});
     syncStatusButtons(ps);
+    applyCardStatus(ps);
   }catch(e){ /* keep optimistic value if backend unreachable */ }
+}
+
+/* colour the card (and open modal) by status so it's identifiable from afar */
+function applyCardStatus(ps){
+  const st = statusMap[ps] || '';
+  const card = $(`.card[data-ps="${cssEscape(ps)}"]`);
+  if(card){
+    card.classList.remove('st-rejected','st-probably','st-maybe','st-selected');
+    if(st){
+      card.classList.add('st-'+st);
+      card.style.borderLeftColor = STATUS_COLOR[st];
+      let f = $('.st-flag', card);
+      if(!f){ f = document.createElement('div'); f.className='st-flag'; card.appendChild(f); }
+      f.className = 'st-flag '+st; f.textContent = STATUS_LABEL[st];
+    }else{
+      card.style.borderLeftColor = '';
+      const f = $('.st-flag', card); if(f) f.remove();
+    }
+  }
+  const box = $('#modalBody');
+  if(box && !$('#modal').hidden){
+    box.classList.remove('st-rejected','st-probably','st-maybe','st-selected');
+    if(st){ box.classList.add('st-'+st); box.style.borderLeftColor = STATUS_COLOR[st]; }
+    else { box.style.borderLeftColor = 'var(--line)'; }
+    let f = $('.st-flag', box);
+    if(st){ if(!f){ f=document.createElement('div'); f.className='st-flag'; box.insertBefore(f, box.firstChild); } f.className='st-flag '+st; f.textContent=STATUS_LABEL[st]; }
+    else if(f){ f.remove(); }
+  }
 }
 
 function syncStatusButtons(ps){
@@ -209,8 +244,12 @@ function render(list){
     const chips=d.tech_stack.map(t=>`<span class="chip">${esc(t.toUpperCase())}</span>`).join('');
     const emoji=THEME_EMOJI[d.Theme]||'🧩';
     const acc=CMP_COLOR[d.complexity_level];
-    return `<article class="card ${ranked?'ranked':''}" style="border-left:4px solid ${acc}">
+    const st = statusMap[d['PS Number']] || '';
+  const borderColor = st ? STATUS_COLOR[st] : acc;
+  const flag = st ? `<div class="st-flag ${st}">${STATUS_LABEL[st]}</div>` : '';
+  return `<article class="card ${ranked?'ranked':''} ${st?'st-'+st:''}" data-ps="${esc(d['PS Number'])}" style="border-left:4px solid ${borderColor}">
       ${rank}
+      ${flag}
       <div class="card-head">
         <span class="ic">${CAT_ICON[d.Category]||'💡'}</span>
         <div>
@@ -277,7 +316,14 @@ function renderTopPicks(){
 function openModal(d){
   const emoji=THEME_EMOJI[d.Theme]||'🧩';
   const chips=d.tech_stack.map(t=>`<span class="chip">${esc(t.toUpperCase())}</span>`).join('');
-  $('#modalBody').innerHTML=`
+  const st = statusMap[d['PS Number']] || '';
+  const borderColor = st ? STATUS_COLOR[st] : 'var(--line)';
+  const flag = st ? `<div class="st-flag ${st}">${STATUS_LABEL[st]}</div>` : '';
+  const box = $('#modalBody');
+  box.className = 'modal-body ' + (st ? 'st-'+st : '');
+  box.style.borderLeft = `6px solid ${borderColor}`;
+  box.innerHTML=`
+    ${flag}
     <div class="card-head">
       <span class="ic">${CAT_ICON[d.Category]||'💡'}</span>
       <div>
