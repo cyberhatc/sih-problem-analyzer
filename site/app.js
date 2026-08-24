@@ -129,26 +129,19 @@ function speak(text){
   if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
   window.speechSynthesis.cancel();
 
-  const doSpeak = ()=>{
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = parseFloat($('#ttsRate').value) || 1;
-    u.lang = 'en-US';
-    const vs = window.speechSynthesis.getVoices();
-    if(vs.length) u.voice = vs.find(v=>/^en/i.test(v.lang)) || vs[0];
-    u.onstart = showTTS;
-    u.onend = hideTTS;
-    u.onerror = hideTTS;
-    ttsUtterance = u;
-    window.speechSynthesis.speak(u);
-    showTTS();
-  };
-
-  // Chrome often has no voices loaded on first call — wait for them
-  if(window.speechSynthesis.getVoices().length === 0){
-    window.speechSynthesis.onvoiceschanged = doSpeak;
-  } else {
-    doSpeak();
-  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = parseFloat($('#ttsRate').value) || 1;
+  u.lang = 'en-US';
+  const vs = window.speechSynthesis.getVoices();
+  if(vs.length) u.voice = vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+  u.onstart = showTTS;
+  u.onend = hideTTS;
+  u.onerror = hideTTS;
+  ttsUtterance = u;
+  // Speak immediately — Chromium/Brave use the default voice even when
+  // getVoices() reports empty (and onvoiceschanged may never fire).
+  window.speechSynthesis.speak(u);
+  showTTS();
 }
 function toggleTTS(){
   if(!('speechSynthesis' in window)) return;
