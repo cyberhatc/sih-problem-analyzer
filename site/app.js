@@ -122,8 +122,9 @@ function statementText(d){
 }
 
 let ttsUtterance = null;
+let ttsEngine = null;
 let speakingEl = null;
-function showTTS(){ $('#ttsBar').hidden=false; }
+function showTTS(){ $('#ttsBar').hidden=false; const t=$('#ttsToggle'); if(t) t.textContent=(ttsEngine==='rv')?'⏹ Stop':'⏸ Pause'; }
 function hideTTS(){ $('#ttsBar').hidden=true; const t=$('#ttsToggle'); if(t) t.textContent='⏸ Pause'; }
 function setSpeakingEl(el){
   if(speakingEl && speakingEl!==el) speakingEl.classList.remove('speaking');
@@ -136,30 +137,49 @@ function clearSpeaking(){
 }
 
 function speak(text){
+  const rate = parseFloat($('#ttsRate').value) || 1;
+  const onStart = ()=>{ showTTS(); };
+  const onEnd = ()=>{ clearSpeaking(); };
+
+  // Primary: cloud TTS (works on Brave/Linux where OS voices are missing)
+  if(window.responsiveVoice && typeof responsiveVoice.speak === 'function'){
+    ttsEngine = 'rv';
+    responsiveVoice.OnVoiceStart = onStart;
+    responsiveVoice.OnVoiceEnd = onEnd;
+    responsiveVoice.speak(text, 'US English Female', { rate: rate, pitch: 1 });
+    showTTS();
+    return;
+  }
+
+  // Fallback: browser Web Speech API
   if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
   window.speechSynthesis.cancel();
-
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = parseFloat($('#ttsRate').value) || 1;
-  u.lang = 'en-US';
+  u.rate = rate; u.lang = 'en-US';
   const vs = window.speechSynthesis.getVoices();
   if(vs.length) u.voice = vs.find(v=>/^en/i.test(v.lang)) || vs[0];
-  u.onstart = showTTS;
-  u.onend = clearSpeaking;
-  u.onerror = clearSpeaking;
+  u.onstart = onStart; u.onend = onEnd; u.onerror = onEnd;
   ttsUtterance = u;
-  // Speak immediately — Chromium/Brave use the default voice even when
-  // getVoices() reports empty (and onvoiceschanged may never fire).
   window.speechSynthesis.speak(u);
   showTTS();
 }
 function toggleTTS(){
+  if(ttsEngine === 'rv'){
+    // ResponsiveVoice has no pause; restart from beginning is non-trivial, so toggle = stop
+    stopTTS();
+    return;
+  }
   if(!('speechSynthesis' in window)) return;
   if(window.speechSynthesis.paused) window.speechSynthesis.resume();
   else if(window.speechSynthesis.speaking) window.speechSynthesis.pause();
   $('#ttsToggle').textContent = window.speechSynthesis.paused ? '▶ Resume' : '⏸ Pause';
 }
-function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); clearSpeaking(); }
+function stopTTS(){
+  if(ttsEngine === 'rv' && window.responsiveVoice) responsiveVoice.cancel();
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  ttsEngine = null;
+  clearSpeaking();
+}
 
 /* ---------- description parser ---------- */
 function fixBullets(t){ return t.replace(/\s0\s(?=[A-Z][a-z])/g, ' • '); }
