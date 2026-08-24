@@ -122,8 +122,18 @@ function statementText(d){
 }
 
 let ttsUtterance = null;
+let speakingEl = null;
 function showTTS(){ $('#ttsBar').hidden=false; }
 function hideTTS(){ $('#ttsBar').hidden=true; const t=$('#ttsToggle'); if(t) t.textContent='⏸ Pause'; }
+function setSpeakingEl(el){
+  if(speakingEl && speakingEl!==el) speakingEl.classList.remove('speaking');
+  speakingEl = el || null;
+  if(speakingEl) speakingEl.classList.add('speaking');
+}
+function clearSpeaking(){
+  if(speakingEl){ speakingEl.classList.remove('speaking'); speakingEl=null; }
+  hideTTS();
+}
 
 function speak(text){
   if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
@@ -135,8 +145,8 @@ function speak(text){
   const vs = window.speechSynthesis.getVoices();
   if(vs.length) u.voice = vs.find(v=>/^en/i.test(v.lang)) || vs[0];
   u.onstart = showTTS;
-  u.onend = hideTTS;
-  u.onerror = hideTTS;
+  u.onend = clearSpeaking;
+  u.onerror = clearSpeaking;
   ttsUtterance = u;
   // Speak immediately — Chromium/Brave use the default voice even when
   // getVoices() reports empty (and onvoiceschanged may never fire).
@@ -149,7 +159,7 @@ function toggleTTS(){
   else if(window.speechSynthesis.speaking) window.speechSynthesis.pause();
   $('#ttsToggle').textContent = window.speechSynthesis.paused ? '▶ Resume' : '⏸ Pause';
 }
-function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); hideTTS(); }
+function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); clearSpeaking(); }
 
 /* ---------- description parser ---------- */
 function fixBullets(t){ return t.replace(/\s0\s(?=[A-Z][a-z])/g, ' • '); }
@@ -429,7 +439,11 @@ document.addEventListener('click', e=>{
   if(spk){
     e.stopPropagation();
     const rec = DATA.find(d=>d['PS Number']===spk.dataset.ps);
-    if(rec) speak(statementText(rec));
+    if(rec){
+      const el = spk.closest('.card') || spk.closest('.modal-box');
+      setSpeakingEl(el);
+      speak(statementText(rec));
+    }
   }
 });
 
